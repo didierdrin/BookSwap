@@ -95,27 +95,56 @@ class _BrowseListingsState extends State<BrowseListings> {
                       return BookCard(
                         book: b,
                         onSwap: () async {
-                          try {
-                            await prov.requestSwap(b);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Swap request sent for "${b.title}"'),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Error: $e'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          }
-                        },
+  try {
+    print('=== SWAP BUTTON PRESSED ===');
+    await prov.requestSwap(b);
+    
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Swap request sent for "${b.title}"'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  } catch (e) {
+    print('=== SWAP BUTTON ERROR ===');
+    print('Error: $e');
+    
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to send swap request: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 5),
+        ),
+      );
+    }
+  }
+},
+                        // onSwap: () async {
+                        //   try {
+                        //     await prov.requestSwap(b);
+                        //     if (context.mounted) {
+                        //       ScaffoldMessenger.of(context).showSnackBar(
+                        //         SnackBar(
+                        //           content: Text('Swap request sent for "${b.title}"'),
+                        //           backgroundColor: Colors.green,
+                        //         ),
+                        //       );
+                        //     }
+                        //   } catch (e) {
+                        //     if (context.mounted) {
+                        //       ScaffoldMessenger.of(context).showSnackBar(
+                        //         SnackBar(
+                        //           content: Text('Error: $e'),
+                        //           backgroundColor: Colors.red,
+                        //         ),
+                        //       );
+                        //     }
+                        //   }
+                        // },
                       );
                     },
                   ),

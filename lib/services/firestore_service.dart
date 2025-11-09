@@ -44,21 +44,59 @@ class FirestoreService {
   Stream<QuerySnapshot<Map<String, dynamic>>> incomingOffers(String uid) =>
       _db.collection('swaps').where('receiverId', isEqualTo: uid).snapshots();
 
+  
   Future<String> createSwap({required String bookId, required String senderId, required String receiverId}) async {
-    print('Creating swap for book: $bookId');
+  print('=== CREATING SWAP IN FIRESTORE ===');
+  print('Book ID: $bookId');
+  print('Sender ID: $senderId');
+  print('Receiver ID: $receiverId');
+  
+  try {
     final ref = _db.collection('swaps').doc();
-    await ref.set({
+    final swapData = {
       'bookId': bookId,
       'senderId': senderId,
       'receiverId': receiverId,
       'status': 'Pending',
       'createdAt': FieldValue.serverTimestamp(),
+    };
+    
+    print('Swap data: $swapData');
+    
+    await ref.set(swapData);
+    print('Swap document created with ID: ${ref.id}');
+    
+    // Update book status
+    print('Updating book status to Pending...');
+    await _db.collection('books').doc(bookId).update({
+      'status': 'Pending',
+      'updatedAt': FieldValue.serverTimestamp(),
     });
-    print('Updating book status to Pending for book: $bookId');
-    await _db.collection('books').doc(bookId).update({'status': 'Pending'});
+    
     print('Book status updated successfully');
     return ref.id;
+    
+  } catch (e) {
+    print('Error creating swap: $e');
+    rethrow;
   }
+}
+
+  // Future<String> createSwap({required String bookId, required String senderId, required String receiverId}) async {
+  //   print('Creating swap for book: $bookId');
+  //   final ref = _db.collection('swaps').doc();
+  //   await ref.set({
+  //     'bookId': bookId,
+  //     'senderId': senderId,
+  //     'receiverId': receiverId,
+  //     'status': 'Pending',
+  //     'createdAt': FieldValue.serverTimestamp(),
+  //   });
+  //   print('Updating book status to Pending for book: $bookId');
+  //   await _db.collection('books').doc(bookId).update({'status': 'Pending'});
+  //   print('Book status updated successfully');
+  //   return ref.id;
+  // }
 
   Future<void> updateSwapStatus(String swapId, String status) async {
     await _db.collection('swaps').doc(swapId).update({

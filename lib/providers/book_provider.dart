@@ -132,14 +132,54 @@ class BookProvider with ChangeNotifier {
 
   // ------------ Swap ------------
   Future<void> requestSwap(Book book) async {
-    final me = _auth.currentUser!;
-    if (me.uid == book.ownerId) return;
+  try {
+    final me = _auth.currentUser;
+    if (me == null) throw Exception('User not logged in');
+    if (me.uid == book.ownerId) throw Exception('Cannot swap your own book');
+    if (book.id.isEmpty) throw Exception('Invalid book ID');
     
-    print('Requesting swap for book: ${book.id}');
-    await _svc.createSwap(bookId: book.id, senderId: me.uid, receiverId: book.ownerId);
+    print('=== SWAP REQUEST STARTED ===');
+    print('Current User: ${me.uid}');
+    print('Book ID: ${book.id}');
+    print('Book Owner: ${book.ownerId}');
+    print('Book Title: ${book.title}');
+    
+    // Check if book already has pending swap
+    if (book.status == 'Pending') {
+      throw Exception('This book already has a pending swap request');
+    }
+    
+    print('Creating swap in Firestore...');
+    final swapId = await _svc.createSwap(
+      bookId: book.id, 
+      senderId: me.uid, 
+      receiverId: book.ownerId
+    );
+    
+    print('Swap created with ID: $swapId');
+    
+    // Ensure chat thread exists
+    print('Ensuring chat thread...');
     await _svc.ensureThread(me.uid, book.ownerId);
-    print('Swap request completed');
+    
+    print('=== SWAP REQUEST COMPLETED ===');
+    
+  } catch (e) {
+    print('=== SWAP REQUEST FAILED ===');
+    print('Error: $e');
+    print('Stack trace: ${e.toString()}');
+    rethrow; // Re-throw to show in UI
   }
+}
+  // Future<void> requestSwap(Book book) async {
+  //   final me = _auth.currentUser!;
+  //   if (me.uid == book.ownerId) return;
+    
+  //   print('Requesting swap for book: ${book.id}');
+  //   await _svc.createSwap(bookId: book.id, senderId: me.uid, receiverId: book.ownerId);
+  //   await _svc.ensureThread(me.uid, book.ownerId);
+  //   print('Swap request completed');
+  // }
 
   Future<void> acceptSwap(String swapId, String bookId) async {
     await _svc.acceptSwap(swapId, bookId);
